@@ -111,7 +111,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private let menu = NSMenu()
     /// Drops the panel to sit where other menu bar apps put theirs.
-    private let menuDrop: CGFloat = 5
+    private let menuDrop: CGFloat = 6
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
