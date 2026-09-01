@@ -7,18 +7,26 @@ cd "$(dirname "$0")"
 NAME="ThemeSwitch"
 APP="$NAME.app"
 
-rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+# Staged outside the project directory, then moved into place. Under iCloud's
+# "Desktop & Documents" sync the file provider stamps com.apple.FinderInfo onto
+# the bundle in the window between the xattr clear and codesign, and signing
+# then fails with "resource fork, Finder information, or similar detritus not
+# allowed". Building on unsynced storage removes the race.
+STAGE="$(mktemp -d)"
+trap 'rm -rf "$STAGE"' EXIT
+BUILD="$STAGE/$APP"
+
+mkdir -p "$BUILD/Contents/MacOS" "$BUILD/Contents/Resources"
 
 swiftc -O \
     -target arm64-apple-macos13.0 \
     -framework AppKit -framework ServiceManagement \
-    -o "$APP/Contents/MacOS/$NAME" \
+    -o "$BUILD/Contents/MacOS/$NAME" \
     Sources/main.swift
 
-cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+cp Resources/AppIcon.icns "$BUILD/Contents/Resources/AppIcon.icns"
 
-cat > "$APP/Contents/Info.plist" <<'PLIST'
+cat > "$BUILD/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -40,7 +48,10 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 PLIST
 
 # Ad-hoc signature: enough for local use and for "Open at Login" to register.
-xattr -cr "$APP"
-codesign --force --sign - "$APP"
+xattr -cr "$BUILD"
+codesign --force --sign - "$BUILD"
+
+rm -rf "$APP"
+mv "$BUILD" "$APP"
 
 echo "Built $(pwd)/$APP"
