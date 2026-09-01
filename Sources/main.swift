@@ -29,14 +29,6 @@ enum Mode: Int, CaseIterable {
         return image
     }
 
-    /// The same glyph, scaled to sit beside a menu item's title.
-    var menuImage: NSImage? {
-        let configuration = NSImage.SymbolConfiguration(
-            pointSize: NSFont.menuFont(ofSize: 0).pointSize, weight: .regular)
-        let image = self.image?.withSymbolConfiguration(configuration)
-        image?.isTemplate = true
-        return image
-    }
 }
 
 // MARK: - Reading and writing the system appearance
@@ -112,7 +104,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let menu = NSMenu()
     /// Panel offset from the button's bottom-left corner. Positive x moves the
     /// panel right, positive y moves it down.
-    private let menuShift: CGFloat = -10
+    /// Chosen so the menu's glyph column sits on the same vertical lane as the
+    /// status bar glyph: their centres measured 5.75pt apart at -26.
+    private let menuShift: CGFloat = -20.25
     private let menuDrop: CGFloat = 6
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -175,7 +169,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 title: mode.title, action: #selector(selectMode(_:)), keyEquivalent: "")
             item.target = self
             item.tag = mode.rawValue
-            item.image = mode.menuImage
+            // Same image the status bar uses. NSMenuItem normalises item images
+            // to its own size -- measured 10.5pt wide against the status bar's
+            // 13pt, and unchanged by anything set on the image -- so matching
+            // the two is not possible without a custom item view.
+            item.image = mode.image
             item.state = mode == current ? .on : .off
             menu.addItem(item)
         }
