@@ -1,3 +1,5 @@
+<img src="Resources/icon-preview.png" alt="" width="120" align="right">
+
 # ThemeSwitch
 
 A tiny macOS menu bar app for switching the system appearance between **Auto**, **Light**, and **Dark**.
@@ -54,6 +56,17 @@ Worth understanding before you depend on it:
 - **It can never ship on the Mac App Store.** Review guideline 2.5.1 prohibits private APIs and specifically flags `dlopen`/`dlsym` used to reach them. Complying would mean dropping the private call, which would remove the only reason this app exists.
 
 The whole app is one file, [`Sources/main.swift`](Sources/main.swift), a little over 200 lines. That's deliberate. A free menu bar utility is exactly the shape of software worth being able to read end to end before you install it.
+
+## Development
+
+The icon is generated, not hand-drawn — [`Resources/make-icon.swift`](Resources/make-icon.swift)
+renders every size from the same vector source and `iconutil` packs them:
+
+```bash
+swift Resources/make-icon.swift
+iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns
+rm -rf Resources/AppIcon.iconset
+```
 
 ## License
 
