@@ -110,6 +110,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private var statusItem: NSStatusItem!
     private let menu = NSMenu()
+    /// Raises the panel to sit where other menu bar apps put theirs.
+    private let menuTopNudge: CGFloat = 3
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -141,12 +143,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func showMenu() {
         guard let button = statusItem.button else { return }
+
+        // The status bar window carries the *menu bar's* appearance, which goes
+        // dark over a dark wallpaper even while the system is Light. A menu popped
+        // in that window inherits it and renders dark out of step with every other
+        // menu on screen, so pin it to the app's appearance, which tracks the real
+        // system setting. Re-read on each open so Auto flipping is picked up.
+        menu.appearance = NSApp.effectiveAppearance
+
         button.highlight(true)
         // NSStatusBarButton is flipped, so y grows downward and bounds.height is
-        // its bottom edge. The menu's top-left corner lands on the button's
-        // bottom-left corner, which is the alignment we want. popUp blocks until
-        // the menu closes, so the un-highlight below runs on dismissal.
-        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height), in: button)
+        // its bottom edge: the menu's top-left corner lands on the button's
+        // bottom-left corner, nudged back up to match neighbouring menus. popUp
+        // blocks until the menu closes, so the un-highlight runs on dismissal.
+        menu.popUp(
+            positioning: nil,
+            at: NSPoint(x: 0, y: button.bounds.height - menuTopNudge),
+            in: button)
         button.highlight(false)
     }
 
