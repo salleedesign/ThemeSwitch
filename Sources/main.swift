@@ -110,8 +110,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private var statusItem: NSStatusItem!
     private let menu = NSMenu()
-    /// Raises the panel to sit where other menu bar apps put theirs.
-    private let menuTopNudge: CGFloat = 3
+    /// Drops the panel to sit where other menu bar apps put theirs.
+    private let menuDrop: CGFloat = 3
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -154,11 +154,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         button.highlight(true)
         // NSStatusBarButton is flipped, so y grows downward and bounds.height is
         // its bottom edge: the menu's top-left corner lands on the button's
-        // bottom-left corner, nudged back up to match neighbouring menus. popUp
+        // bottom-left corner, nudged down to match neighbouring menus. popUp
         // blocks until the menu closes, so the un-highlight runs on dismissal.
         menu.popUp(
             positioning: nil,
-            at: NSPoint(x: 0, y: button.bounds.height - menuTopNudge),
+            at: NSPoint(x: 0, y: button.bounds.height + menuDrop),
             in: button)
         button.highlight(false)
     }
