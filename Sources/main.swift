@@ -110,7 +110,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private var statusItem: NSStatusItem!
     private let menu = NSMenu()
-    /// Drops the panel to sit where other menu bar apps put theirs.
+    /// Panel offset from the button's bottom-left corner. Positive x moves the
+    /// panel right, positive y moves it down.
+    private let menuShift: CGFloat = -10
     private let menuDrop: CGFloat = 6
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -158,7 +160,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // blocks until the menu closes, so the un-highlight runs on dismissal.
         menu.popUp(
             positioning: nil,
-            at: NSPoint(x: 0, y: button.bounds.height + menuDrop),
+            at: NSPoint(x: menuShift, y: button.bounds.height + menuDrop),
             in: button)
         button.highlight(false)
     }
