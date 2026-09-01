@@ -106,7 +106,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// panel right, positive y moves it down.
     /// Chosen so the menu's glyph column sits on the same vertical lane as the
     /// status bar glyph: their centres measured 5.75pt apart at -26.
-    private let menuShift: CGFloat = -19.25
+    private let menuShift: CGFloat = -19.75
     private let menuDrop: CGFloat = 6
 
     func applicationDidFinishLaunching(_ notification: Notification) {
