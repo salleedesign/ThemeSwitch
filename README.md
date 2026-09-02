@@ -9,9 +9,6 @@ A tiny macOS menu bar app for switching the system appearance between **Auto**, 
 
 macOS has the setting, but it lives in System Settings → Appearance, and Control Center has no module for it. ThemeSwitch puts the same three options one click away.
 
-<img src="docs/demo.gif" width="560"
-     alt="Switching the system appearance from the menu bar; the desktop, menu bar and Finder window all flip between light and dark.">
-
 ## Why another dark mode toggle
 
 There are several already. The difference is the third state.
@@ -61,7 +58,7 @@ Worth understanding before you depend on it:
 - **A future macOS could rename or drop these symbols.** They're looked up with `dlsym` at run time rather than linked, so the app would still launch, and it falls back to the AppleScript above for Light and Dark. Only Auto would stop working.
 - **It can never ship on the Mac App Store.** Review guideline 2.5.1 prohibits private APIs and specifically flags `dlopen`/`dlsym` used to reach them. Complying would mean dropping the private call, which would remove the only reason this app exists.
 
-The whole app is one file, [`Sources/main.swift`](Sources/main.swift), a little over 200 lines. That's deliberate. A free menu bar utility is exactly the shape of software worth being able to read end to end before you install it.
+The whole app is one file, [`Sources/main.swift`](Sources/main.swift), under 200 lines. That's deliberate. A free menu bar utility is exactly the shape of software worth being able to read end to end before you install it.
 
 ## Development
 

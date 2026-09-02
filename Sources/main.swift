@@ -3,32 +3,12 @@ import ServiceManagement
 
 // MARK: - Appearance modes
 
-enum Mode: Int, CaseIterable {
-    case auto, light, dark
+enum Mode: String, CaseIterable {
+    /// Raw values are the SF Symbols shown in the status bar and menu.
+    case auto = "circle.lefthalf.filled", light = "sun.max", dark = "moon"
 
-    var title: String {
-        switch self {
-        case .auto:  return "Auto"
-        case .light: return "Light"
-        case .dark:  return "Dark"
-        }
-    }
-
-    var symbolName: String {
-        switch self {
-        case .auto:  return "circle.lefthalf.filled"
-        case .light: return "sun.max"
-        case .dark:  return "moon"
-        }
-    }
-
-    /// Template image for the status bar, at the symbol's natural size.
-    var image: NSImage? {
-        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
-        image?.isTemplate = true
-        return image
-    }
-
+    var title: String { "\(self)".capitalized }
+    var image: NSImage? { NSImage(systemSymbolName: rawValue, accessibilityDescription: title) }
 }
 
 // MARK: - Reading and writing the system appearance
@@ -52,47 +32,30 @@ private typealias BoolSetter = @convention(c) (Bool) -> Void
 enum SystemAppearance {
 
     static var current: Mode {
-        let switchesAutomatically: BoolGetter? =
-            skyLightFunction("SLSGetAppearanceThemeSwitchesAutomatically")
-        if switchesAutomatically?() == true { return .auto }
-
+        let isAuto: BoolGetter? = skyLightFunction("SLSGetAppearanceThemeSwitchesAutomatically")
         let isDark: BoolGetter? = skyLightFunction("SLSGetAppearanceThemeLegacy")
-        if let isDark { return isDark() ? .dark : .light }
-
+        if isAuto?() == true { return .auto }
         // UserDefaults.standard searches NSGlobalDomain, where this key lives.
-        return UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark" ? .dark : .light
+        let dark = isDark?() ?? (UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark")
+        return dark ? .dark : .light
     }
 
     static func set(_ mode: Mode) {
-        let setAutomatic: BoolSetter? =
-            skyLightFunction("SLSSetAppearanceThemeSwitchesAutomatically")
+        let setAuto: BoolSetter? = skyLightFunction("SLSSetAppearanceThemeSwitchesAutomatically")
         let setDark: BoolSetter? = skyLightFunction("SLSSetAppearanceThemeLegacy")
 
-        guard let setAutomatic, let setDark else {
-            setViaAppleScript(mode)
+        guard let setAuto, let setDark else {
+            // Only reached if SkyLight stops exporting the symbols above. Auto has
+            // no AppleScript equivalent, so it falls back to Light.
+            NSAppleScript(source: """
+                tell application "System Events" to tell appearance preferences \
+                to set dark mode to \(mode == .dark)
+                """)?.executeAndReturnError(nil)
             return
         }
 
-        switch mode {
-        case .auto:
-            setAutomatic(true)
-        case .light:
-            setAutomatic(false)
-            setDark(false)
-        case .dark:
-            setAutomatic(false)
-            setDark(true)
-        }
-    }
-
-    /// Only reached if SkyLight stops exporting the symbols above. Auto has no
-    /// AppleScript equivalent, so it falls back to Light.
-    private static func setViaAppleScript(_ mode: Mode) {
-        let source = """
-            tell application "System Events" to tell appearance preferences \
-            to set dark mode to \(mode == .dark)
-            """
-        NSAppleScript(source: source)?.executeAndReturnError(nil)
+        setAuto(mode == .auto)
+        if mode != .auto { setDark(mode == .dark) }
     }
 }
 
@@ -100,18 +63,10 @@ enum SystemAppearance {
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
-    private var statusItem: NSStatusItem!
+    private lazy var statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let menu = NSMenu()
-    /// Panel offset from the button's bottom-left corner. Positive x moves the
-    /// panel right, positive y moves it down.
-    /// Chosen so the menu's glyph column sits on the same vertical lane as the
-    /// status bar glyph: their centres measured 5.75pt apart at -26.
-    private let menuShift: CGFloat = -19.75
-    private let menuDrop: CGFloat = 6
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-
         menu.delegate = self
         // Deliberately not statusItem.menu: that hands positioning to the system,
         // which lines the menu's *content* up with the button and leaves the panel
@@ -125,10 +80,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Keep the icon honest when appearance is changed elsewhere: from System
         // Settings, or by the Auto schedule flipping at sunrise/sunset.
         DistributedNotificationCenter.default.addObserver(
-            self,
-            selector: #selector(updateIcon),
-            name: Notification.Name("AppleInterfaceThemeChangedNotification"),
-            object: nil)
+            self, selector: #selector(updateIcon),
+            name: Notification.Name("AppleInterfaceThemeChangedNotification"), object: nil)
     }
 
     @objc private func updateIcon() {
@@ -150,25 +103,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         button.highlight(true)
         // NSStatusBarButton is flipped, so y grows downward and bounds.height is
         // its bottom edge: the menu's top-left corner lands on the button's
-        // bottom-left corner, nudged down to match neighbouring menus. popUp
-        // blocks until the menu closes, so the un-highlight runs on dismissal.
-        menu.popUp(
-            positioning: nil,
-            at: NSPoint(x: menuShift, y: button.bounds.height + menuDrop),
-            in: button)
+        // bottom-left corner. x is measured so the menu's glyph column sits in the
+        // same lane as the status bar glyph; the 6pt drop matches neighbouring
+        // menus. popUp blocks until the menu closes, so the un-highlight runs on
+        // dismissal.
+        menu.popUp(positioning: nil, at: NSPoint(x: -19.75, y: button.bounds.height + 6), in: button)
         button.highlight(false)
     }
 
-    // Rebuilt on every open so the checkmark reflects the live system state.
+    // Rebuilt on every open so the checkmarks reflect the live system state.
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
         let current = SystemAppearance.current
         for mode in Mode.allCases {
-            let item = NSMenuItem(
-                title: mode.title, action: #selector(selectMode(_:)), keyEquivalent: "")
+            let item = NSMenuItem(title: mode.title, action: #selector(selectMode(_:)), keyEquivalent: "")
             item.target = self
-            item.tag = mode.rawValue
+            item.representedObject = mode
             // Same image the status bar uses. NSMenuItem normalises item images
             // to its own size -- measured 10.5pt wide against the status bar's
             // 13pt, and unchanged by anything set on the image -- so matching
@@ -187,15 +138,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(loginItem)
 
         menu.addItem(.separator())
-        menu.addItem(
-            NSMenuItem(
-                title: "Quit ThemeSwitch",
-                action: #selector(NSApplication.terminate(_:)),
-                keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(
+            title: "Quit ThemeSwitch", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
     }
 
     @objc private func selectMode(_ sender: NSMenuItem) {
-        guard let mode = Mode(rawValue: sender.tag) else { return }
+        guard let mode = sender.representedObject as? Mode else { return }
         SystemAppearance.set(mode)
         updateIcon()
     }
@@ -215,8 +163,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 }
 
-let application = NSApplication.shared
+// LSUIElement in Info.plist already makes this an accessory app: no Dock icon, no app menu.
 let delegate = AppDelegate()
-application.delegate = delegate
-application.setActivationPolicy(.accessory)
-application.run()
+NSApplication.shared.delegate = delegate
+NSApplication.shared.run()

@@ -20,7 +20,6 @@ mkdir -p "$BUILD/Contents/MacOS" "$BUILD/Contents/Resources"
 
 swiftc -O \
     -target arm64-apple-macos13.0 \
-    -framework AppKit -framework ServiceManagement \
     -o "$BUILD/Contents/MacOS/$NAME" \
     Sources/main.swift
 
