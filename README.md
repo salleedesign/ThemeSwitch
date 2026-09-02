@@ -1,16 +1,16 @@
-<img src="Resources/icon-preview.png" alt="" width="120" align="right">
+<img src="Resources/icon-preview.png" alt="" width="96">
 
 # ThemeSwitch
 
 A tiny macOS menu bar app for switching the system appearance between **Auto**, **Light**, and **Dark**.
 
+<img src="docs/screenshot.png" width="362"
+     alt="ThemeSwitch's menu open in the macOS menu bar, showing Auto checked, plus Light and Dark, above Open at Login and Quit.">
+
 macOS has the setting, but it lives in System Settings → Appearance, and Control Center has no module for it. ThemeSwitch puts the same three options one click away.
 
 <img src="docs/demo.gif" width="560"
      alt="Switching the system appearance from the menu bar; the desktop, menu bar and Finder window all flip between light and dark.">
-
-<img src="docs/screenshot.png" width="362"
-     alt="ThemeSwitch's menu open in the macOS menu bar, showing Auto checked, plus Light and Dark, above Open at Login and Quit.">
 
 ## Why another dark mode toggle
 
