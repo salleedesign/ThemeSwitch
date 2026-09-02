@@ -1,6 +1,7 @@
-<img src="Resources/icon-preview.png" alt="" width="96">
-
-# ThemeSwitch
+<h1>
+  <img src="Resources/icon-preview.png" width="64" align="absmiddle" alt="">
+  ThemeSwitch
+</h1>
 
 A tiny macOS menu bar app for switching the system appearance between **Auto**, **Light**, and **Dark**.
 
