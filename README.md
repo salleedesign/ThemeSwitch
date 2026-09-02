@@ -59,8 +59,8 @@ The whole app is one file, [`Sources/main.swift`](Sources/main.swift), a little 
 
 ## Development
 
-The icon source is [`Resources/Icon_Art.svg`](Resources/Icon_Art.svg) — full-bleed
-art with no mask. [`Resources/make-icon.swift`](Resources/make-icon.swift) insets it
+The icon master is [`Resources/Icon_Art_1024.png`](Resources/Icon_Art_1024.png),
+exported from Figma — full-bleed art with no mask. [`Resources/make-icon.swift`](Resources/make-icon.swift) insets it
 on the canvas, cuts it to the macOS app-icon plate, renders every size natively
 rather than downscaling one master, and `iconutil` packs them:
 

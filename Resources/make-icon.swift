@@ -1,8 +1,12 @@
-// Generates Resources/AppIcon.icns from Icon_Art.svg.
+// Generates Resources/AppIcon.icns from Icon_Art_1024.png.
 // Run: swift Resources/make-icon.swift && iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns
 //
-// Icon_Art.svg is the toolkit's art layer: a full-bleed 1024 square with no
-// mask. macOS wants that art inset on the canvas and cut to the app-icon
+// The master is Figma's own 1024 render rather than the source SVG: AppKit
+// rasterises the art's gaussian blurs and inner shadow noticeably flatter than
+// Figma does, losing the drop shadow under the circle.
+//
+// That export is full-bleed with opaque corners (it is the iOS shape, which the
+// OS masks at render time). macOS wants the art inset and cut to the app-icon
 // plate, so this masks it to a superellipse at the standard 824/1024 ratio.
 import AppKit
 
@@ -13,7 +17,7 @@ let inset: CGFloat = 100          // Apple's grid leaves the art ~824pt wide
 let side = canvas - inset * 2
 
 let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-let artURL = root.appendingPathComponent("Icon_Art.svg")
+let artURL = root.appendingPathComponent("Icon_Art_1024.png")
 guard let art = NSImage(contentsOf: artURL) else {
     fatalError("could not load \(artURL.path)")
 }
