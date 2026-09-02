@@ -6,6 +6,9 @@ A tiny macOS menu bar app for switching the system appearance between **Auto**, 
 
 macOS has the setting, but it lives in System Settings → Appearance, and Control Center has no module for it. ThemeSwitch puts the same three options one click away.
 
+<img src="docs/screenshot.png" width="362"
+     alt="ThemeSwitch's menu open in the macOS menu bar, showing Auto checked, plus Light and Dark, above Open at Login and Quit.">
+
 ## Why another dark mode toggle
 
 There are several already. The difference is the third state.
